@@ -137,6 +137,8 @@ try {
             padding: 10px;
             background-color: #343a40;
             color: #fff;
+            position: absolute;
+            bottom: 0;
         }
     </style>
 </head>

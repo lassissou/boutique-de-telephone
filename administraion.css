@@ -97,11 +97,11 @@ main p {
 
 /* Footer */
 footer {
-    background: var(--clr-secondary);
+    background-color: #333;
     color: #fff;
     text-align: center;
-    padding: var(--spacing-medium);
-    margin-top: var(--spacing-large);
+    position: fixed;
+    bottom: auto;
 }
 
 footer p {
