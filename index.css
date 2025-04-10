@@ -1,0 +1,390 @@
+:root {
+    --clr-primary: #FF6F61; /* Couleur principale */
+    --clr-secondary: #4A4A4A; /* Couleur secondaire */
+    --clr-bg: #F9F9F9; /* Couleur de fond */
+    --clr-card: #FFFFFF; /* Couleur des cartes */
+    --clr-accent: #4A90E2; /* Couleur d'accent */
+    --clr-accent-light: #E3F2FD; /* Accent clair */
+    --clr-text: #333333; /* Couleur du texte */
+    --clr-shadow: rgba(0, 0, 0, 0.1); /* Ombre légère */
+    --clr-hover: #FF8A75; /* Couleur de survol */
+    --clr-footer-bg: #333333; /* Couleur de fond du footer */
+    --clr-footer-text: #FFFFFF; /* Couleur du texte du footer */
+    --clr-title: #FF4D4D; /* Rouge non foncé pour les titres */
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-large: 18px;
+    --spacing-small: 0.5rem;
+    --spacing-medium: 1rem;
+    --spacing-large: 2rem;
+    --transition: 0.3s ease;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    line-height: 1.5;
+    font-size: var(--font-size-base);
+}
+
+/* Header */
+header {
+    background: linear-gradient(90deg, var(--clr-primary), var(--clr-accent));
+    padding: var(--spacing-medium);
+    box-shadow: 0 2px 8px var(--clr-shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+}
+
+header .logo img {
+    height: 50px;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: var(--spacing-medium);
+    position: relative;
+}
+
+nav ul li {
+    position: relative;
+}
+
+nav ul li ul {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--clr-card);
+    box-shadow: 0 4px 8px var(--clr-shadow);
+    display: none;
+    z-index: 10;
+    padding: var(--spacing-small) 0;
+    border-radius: 5px;
+}
+
+nav ul li:hover ul {
+    display: block;
+}
+
+nav ul li ul li {
+    padding: var(--spacing-small) var(--spacing-medium);
+}
+
+nav ul li ul li a {
+    text-decoration: none;
+    color: var(--clr-secondary);
+    font-size: var(--font-size-small);
+    transition: background-color var(--transition);
+}
+
+nav ul li ul li a:hover {
+    background-color: var(--clr-accent-light);
+    color: var(--clr-primary);
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+    padding: var(--spacing-small) var(--spacing-medium);
+    transition: background-color var(--transition);
+}
+
+nav ul li a:hover {
+    background-color: var(--clr-hover);
+    border-radius: 5px;
+}
+
+/* Bouton Ajouter au panier */
+form button[name="ajouter_au_panier"] {
+    background-color: var(--clr-primary); /* Couleur de fond principale */
+    color: #fff; /* Couleur du texte */
+    border: none;
+    padding: var(--spacing-small) var(--spacing-medium);
+    font-size: var(--font-size-base);
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color var(--transition), transform var(--transition);
+    box-shadow: 0 4px 6px var(--clr-shadow);
+    margin-top: var(--spacing-small); /* Espacement au-dessus du bouton */
+}
+
+form button[name="ajouter_au_panier"]:hover {
+    background-color: var(--clr-hover); /* Couleur de survol */
+    transform: translateY(-2px); /* Légère élévation au survol */
+    box-shadow: 0 6px 12px var(--clr-shadow);
+}
+
+form button[name="ajouter_au_panier"]:active {
+    transform: translateY(0); /* Réinitialisation lors du clic */
+    box-shadow: 0 2px 4px var(--clr-shadow);
+}
+
+/* Boutons */
+.bouton-plus {
+    display: inline-block;
+    margin: var(--spacing-medium);
+    padding: var(--spacing-small) var(--spacing-medium);
+    background: var(--clr-accent);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: transform var(--transition), background-color var(--transition);
+    box-shadow: 0 4px 6px var(--clr-shadow);
+    position: relative;
+    left: 20px; /* Décalage vers la droite */
+}
+
+.bouton-plus:hover {
+    background: var(--clr-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px var(--clr-shadow);
+}
+
+/* Sections */
+section {
+    text-align: center; /* Centrer le contenu */
+    margin: var(--spacing-large) auto;
+    padding: var(--spacing-large);
+    background: var(--clr-card);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--clr-shadow);
+    max-width: 1200px;
+}
+
+section h2 {
+    font-size: var(--font-size-large);
+    color: var(--clr-title); /* Rouge non foncé pour les titres */
+    margin-bottom: var(--spacing-medium);
+}
+
+/* Bannière avec image en arrière-plan */
+.banner {
+    position: relative;
+    background-image: url('images/banner.jpg'); /* Image de la bannière */
+    background-size: cover; /* L'image couvre toute la section */
+    background-position: center; /* Centrer l'image */
+    height: 500px; /* Hauteur ajustée de la bannière */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centrer verticalement le contenu */
+    align-items: center; /* Centrer horizontalement le contenu */
+    color: #fff; /* Couleur du texte */
+    text-align: center;
+    padding: var(--spacing-large);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Ombre pour un effet de profondeur */
+    overflow: hidden; /* Assure que tout reste dans les limites */
+}
+
+.banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Superposition sombre pour améliorer la lisibilité du texte */
+    z-index: 1;
+}
+
+.banner h1,
+.banner p,
+.banner a {
+    position: relative;
+    z-index: 2; /* Placer le texte au-dessus de la superposition sombre */
+}
+
+.banner h1 {
+    font-size: 3rem; /* Taille du titre ajustée */
+    margin-bottom: var(--spacing-small);
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Ombre pour le texte */
+}
+
+.banner p {
+    font-size: 1.5rem; /* Taille du texte ajustée */
+    margin-bottom: var(--spacing-medium);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Ombre pour le texte */
+}
+
+.banner a {
+    display: inline-block;
+    padding: var(--spacing-small) var(--spacing-medium);
+    background-color: var(--clr-primary);
+    color: #fff;
+    text-decoration: none;
+    font-size: var(--font-size-large); /* Taille du bouton ajustée */
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color var(--transition), transform var(--transition);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Ombre pour le bouton */
+    margin-top: var(--spacing-small); /* Espacement au-dessus du bouton */
+}
+
+.banner a:hover {
+    background-color: var(--clr-hover);
+    transform: translateY(-3px); /* Légère élévation au survol */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Grilles */
+.liste-produits,
+.liste-promotions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--spacing-medium);
+    padding: var(--spacing-large);
+    justify-content: center; /* Centrer les éléments */
+}
+
+/* Cartes */
+.produit, .promotion {
+    background: var(--clr-card);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px var(--clr-shadow);
+    transition: transform var(--transition), box-shadow var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centrer les éléments à l'intérieur */
+    text-align: center;
+    padding: var(--spacing-medium); /* Espacement interne */
+}
+
+.produit:hover, .promotion:hover {
+    transform: translateY(-5px); /* Légère élévation au survol */
+    box-shadow: 0 8px 20px var(--clr-shadow); /* Ombre plus marquée */
+}
+
+/* Images des Produits et Promotions */
+.produit img, .promotion img {
+    width: 300px; /* Largeur fixe */
+    height: 300px; /* Hauteur fixe */
+    object-fit: cover; /* Maintenir les proportions */
+    border-radius: 8px; /* Coins arrondis pour les images */
+    transition: transform var(--transition), filter var(--transition);
+    margin-bottom: var(--spacing-small); /* Espacement sous l'image */
+    box-shadow: 0 4px 12px var(--clr-shadow); /* Ombre autour de l'image */
+}
+
+.produit:hover img, .promotion:hover img {
+    transform: scale(1.1); /* Zoom au survol */
+    filter: brightness(0.9); /* Légère obscurité au survol */
+}
+
+/* Titres des Produits et Promotions */
+.produit h3, .promotion h3 {
+    font-size: var(--font-size-large);
+    margin: var(--spacing-small) 0;
+    color: var(--clr-text); /* Couleur du texte */
+    font-weight: bold;
+}
+
+/* Prix des Produits et Promotions */
+.produit p, .promotion p {
+    font-size: var(--font-size-base);
+    margin: var(--spacing-small) 0;
+    color: var(--clr-secondary); /* Couleur secondaire */
+}
+
+/* Section Messages */
+section p {
+    text-align: center;
+    font-size: var(--font-size-base);
+    color: var(--clr-secondary);
+    margin: var(--spacing-medium) 0;
+}
+
+/* Footer */
+footer {
+    background: var(--clr-footer-bg);
+    color: var(--clr-footer-text);
+    padding: var(--spacing-large);
+    box-shadow: 0 -2px 8px var(--clr-shadow);
+    margin-top: var(--spacing-large);
+}
+
+footer .colonnes-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-medium);
+}
+
+footer .colonne h3 {
+    color: var(--clr-primary);
+    margin-bottom: var(--spacing-small);
+}
+
+footer .colonne ul {
+    list-style: none;
+    padding: 0;
+}
+
+footer .colonne ul li a {
+    color: var(--clr-footer-text);
+    text-decoration: none; /* Suppression du soulignement */
+    transition: color var(--transition);
+}
+
+footer .colonne ul li a:hover {
+    color: var(--clr-primary);
+}
+
+footer .reseaux-sociaux a img {
+    width: 30px;
+    height: 30px;
+    margin-right: var(--spacing-small);
+    transition: transform var(--transition);
+}
+
+footer .reseaux-sociaux a img:hover {
+    transform: scale(1.2);
+}
+
+footer .copyright {
+    margin-top: var(--spacing-medium);
+    font-size: var(--font-size-small);
+    color: var(--clr-footer-text);
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        font-size: var(--font-size-small);
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: var(--spacing-small);
+    }
+
+    .liste-produits,
+    .liste-promotions {
+        grid-template-columns: 1fr;
+        padding: var(--spacing-small);
+    }
+
+    footer .colonnes-footer {
+        flex-direction: column;
+    }
+}
