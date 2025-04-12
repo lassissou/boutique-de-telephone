@@ -76,103 +76,102 @@ try {
     <title>Mon Compte</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 0;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background-color: #f8f9fa;
+    }
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 30px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+        text-align: center;
+        color: #333;
+    }
+    .message {
+        margin-bottom: 15px;
+        padding: 12px;
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        border-radius: 4px;
+        text-align: center;
+    }
+    form {
+        margin-top: 20px;
+    }
+    form div {
+        margin-bottom: 20px;
+    }
+    form label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #555;
+    }
+    form input, form textarea, form button {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+    }
+    form textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    form button {
+        background-color: #007bff;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        border: none;
+    }
+    form button:hover {
+        background-color: #0056b3;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 30px;
+    }
+    table th, table td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+    table th {
+        background-color: #f1f1f1;
+    }
+    table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
 
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        h1, h2 {
-            text-align: center;
-            color: #333;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            border-radius: 4px;
-            text-align: center;
-        }
-
-        form {
-            margin-top: 20px;
-        }
-
-        form div {
-            margin-bottom: 15px;
-        }
-
-        form label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        form input, form textarea, form button {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        form button {
-            background-color: #007bff;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        form button:hover {
-            background-color: #0056b3;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table th, table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-
-        table tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-
-        table tr:hover {
-            background-color: #e9ecef;
-        }
-
-        p {
-            text-align: center;
-            color: #666;
-        }
-    </style>
+.btn-retour:hover {
+    background-color: #0056b3;
+}
+</style>
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
+
     <div class="container">
         <h1>Mon Compte</h1>
         <?php if (!empty($message)): ?>

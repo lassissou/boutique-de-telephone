@@ -46,24 +46,37 @@ try {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+    <meta charset="UTF-8">
     <title>Gestion des commandes - Administration</title>
     <link rel="stylesheet" href="admin.css">
     <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        h2, h3 {
+            text-align: center;
+            color: #333;
+            margin-top: 30px;
+        }
         .form-group {
             margin-bottom: 10px;
         }
         .form-group label { 
             display: block; 
             font-weight: bold; 
+            margin-bottom: 5px;
         }
         .form-group select, 
         .form-group input { 
             width: 100%; 
             padding: 5px; 
             border: 1px solid #ddd; 
-            border-radius: 4px; 
+            border-radius: 4px;
         }
         table {
             width: 100%;
@@ -78,16 +91,61 @@ try {
             text-align: left;
         }
         .message {
-            margin-bottom: 15px;
+            max-width: 800px;
+            margin: 20px auto;
             padding: 10px;
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
             border-radius: 4px;
+            text-align: center;
         }
+        form.inline {
+            display: inline;
+        }
+        form.inline select {
+            margin-right: 5px;
+        }
+        form.inline button {
+            padding: 5px 10px;
+            border: none;
+            background-color: #007BFF;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form.inline button:hover {
+            background-color: #0056b3;
+        }
+        a.action-link {
+            margin-left: 8px;
+            text-decoration: none;
+            color: #007BFF;
+        }
+        a.action-link:hover {
+            text-decoration: underline;
+        }
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #0056b3;
+}
     </style>
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
+
     <h2>Gestion des commandes</h2>
     <?php if (!empty($message)): ?>
         <p class="message"><?php echo htmlspecialchars($message); ?></p>
@@ -117,7 +175,7 @@ try {
                         <td><?php echo htmlspecialchars(number_format($commande['montant_total'], 2)); ?></td>
                         <td><?php echo htmlspecialchars($commande['statut']); ?></td>
                         <td>
-                            <form method="POST" action="admin_commandes.php" style="display:inline;">
+                            <form method="POST" action="admin_commandes.php" class="inline">
                                 <input type="hidden" name="commande_id" value="<?php echo $commande['id']; ?>">
                                 <select name="statut" required>
                                     <option value="en attente" <?php echo $commande['statut'] === 'en attente' ? 'selected' : ''; ?>>En attente</option>
@@ -128,7 +186,7 @@ try {
                                 </select>
                                 <button type="submit" name="update_status">Mettre à jour</button>
                             </form>
-                            <a href="admin_details_commande.php?id=<?php echo $commande['id']; ?>">Détails</a>
+                            <a class="action-link" href="admin_details_commande.php?id=<?php echo $commande['id']; ?>">Détails</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

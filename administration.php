@@ -76,7 +76,7 @@ $action = isset($_GET['action']) ? $_GET['action'] : 'dashboard';
     ?>
 </main>
 <footer>
-    <p>&copy; <?php echo date('Y'); ?> Vente de téléphones. Tous droits réservés.</p>
-</footer>
+    
+
 </body>
 </html>

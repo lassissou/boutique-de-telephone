@@ -44,14 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connexion'])) {
     }
 }
 
-// Gestion de l'inscription
+// Dans la partie gestion de l'inscription, après avoir récupéré $confirmPassword :
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscription'])) {
     $nom = trim($_POST['nom']);
     $email = trim($_POST['email']);
+    $adresse = trim($_POST['adresse']); // Nouveau champ adresse
     $password = trim($_POST['password']);
     $confirmPassword = trim($_POST['confirm_password']);
 
-    if (!empty($nom) && !empty($email) && !empty($password) && !empty($confirmPassword)) {
+    if (!empty($nom) && !empty($email) && !empty($adresse) && !empty($password) && !empty($confirmPassword)) {
         if ($password === $confirmPassword) {
             try {
                 // Vérifier si l'email existe déjà
@@ -60,13 +61,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscription'])) {
                 if ($requete->rowCount() > 0) {
                     $message = "Cet email est déjà utilisé.";
                 } else {
-                    // Insérer le nouvel utilisateur
+                    // Insérer le nouvel utilisateur avec adresse
                     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                    $requete = $connexion->prepare("INSERT INTO utilisateurs (nom, email, mot_de_passe, role) VALUES (:nom, :email, :mot_de_passe, 'utilisateur')");
+                    $requete = $connexion->prepare("INSERT INTO utilisateurs (nom, email, mot_de_passe, adresse, role) VALUES (:nom, :email, :mot_de_passe, :adresse, 'utilisateur')");
                     $requete->execute([
                         ':nom' => $nom,
                         ':email' => $email,
-                        ':mot_de_passe' => $hashedPassword
+                        ':mot_de_passe' => $hashedPassword,
+                        ':adresse' => $adresse
                     ]);
                     $message = "Inscription réussie. Vous pouvez maintenant vous connecter.";
                 }
@@ -94,6 +96,9 @@ error_reporting(E_ALL);
     <link rel="stylesheet" href="connexion.css"> <!-- Ajoutez un fichier CSS pour le style -->
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
+
 <div class="container">
     <h1>Connexion / Inscription</h1>
     <?php if (!empty($message)): ?>
@@ -114,19 +119,26 @@ error_reporting(E_ALL);
 
     <!-- Formulaire d'inscription -->
     <div class="formulaire">
-        <h2>Inscription</h2>
-        <form method="POST" action="connexion.php">
-            <label for="nom">Nom :</label>
-            <input type="text" id="nom" name="nom" required>
-            <label for="email">Email :</label>
-            <input type="email" id="email" name="email" required>
-            <label for="password">Mot de passe :</label>
-            <input type="password" id="password" name="password" required>
-            <label for="confirm_password">Confirmer le mot de passe :</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-            <button type="submit" name="inscription">S'inscrire</button>
-        </form>
-    </div>
+    <h2>Inscription</h2>
+    <form method="POST" action="connexion.php">
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="nom" required>
+        
+        <label for="email">Email :</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="adresse">Adresse :</label>
+        <input type="text" id="adresse" name="adresse" required>
+        
+        <label for="password">Mot de passe :</label>
+        <input type="password" id="password" name="password" required>
+        
+        <label for="confirm_password">Confirmer le mot de passe :</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+        
+        <button type="submit" name="inscription">S'inscrire</button>
+    </form>
+</div>
 </div>
 </body>
 </html>

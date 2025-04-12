@@ -17,70 +17,30 @@ if (empty($_SESSION['panier'])) {
 if (!isset($_SESSION['utilisateur']) || !isset($_SESSION['utilisateur']['id'])) {
     $message = "Veuillez vous connecter pour valider votre commande.";
 } else {
-    // Gestion de la validation de la commande
+    // Gestion de la validation des informations de livraison
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['valider_commande'])) {
         $utilisateur_id = $_SESSION['utilisateur']['id']; // ID de l'utilisateur connecté
         $adresse = trim($_POST['adresse']);
         $mode_paiement = trim($_POST['mode_paiement']);
-        $total_commande = 0;
 
         if (!empty($adresse) && !empty($mode_paiement)) {
-            try {
-                // Calculer le total de la commande
-                foreach ($_SESSION['panier'] as $produit_id => $quantite) {
-                    $requete = $connexion->prepare("SELECT prix FROM produits WHERE id = :id");
-                    $requete->execute([':id' => $produit_id]);
-                    $produit = $requete->fetch(PDO::FETCH_ASSOC);
+            // Stocker les informations de livraison et de paiement dans la session
+            $_SESSION['commande'] = [
+                'utilisateur_id' => $utilisateur_id,
+                'adresse' => $adresse,
+                'mode_paiement' => $mode_paiement,
+                'total_commande' => 0 // Le total sera calculé dans la page de paiement
+            ];
 
-                    if ($produit) {
-                        $total_commande += $produit['prix'] * $quantite;
-                    }
-                }
-
-                // Enregistrer la commande
-                $requete = $connexion->prepare("
-                    INSERT INTO commandes (utilisateur_id, adresse, mode_paiement, montant_total, statut, date_commande)
-                    VALUES (:utilisateur_id, :adresse, :mode_paiement, :montant_total, 'en attente', NOW())
-                ");
-                $requete->execute([
-                    ':utilisateur_id' => $utilisateur_id,
-                    ':adresse' => $adresse,
-                    ':mode_paiement' => $mode_paiement,
-                    ':montant_total' => $total_commande
-                ]);
-
-                // Récupérer l'ID de la commande
-                $commande_id = $connexion->lastInsertId();
-
-                // Enregistrer les détails de la commande
-                foreach ($_SESSION['panier'] as $produit_id => $quantite) {
-                    $requete = $connexion->prepare("
-                        INSERT INTO details_commandes (commande_id, produit_id, quantite)
-                        VALUES (:commande_id, :produit_id, :quantite)
-                    ");
-                    $requete->execute([
-                        ':commande_id' => $commande_id,
-                        ':produit_id' => $produit_id,
-                        ':quantite' => $quantite
-                    ]);
-                }
-
-                // Vider le panier
-                unset($_SESSION['panier']);
-
-                // Rediriger vers la page de confirmation
-                header('Location: confirmation.php');
-                exit;
-            } catch (PDOException $e) {
-                $message = "Erreur lors de la validation de la commande : " . $e->getMessage();
-            }
+            // Rediriger vers la page de paiement
+            header('Location: paiement.php');
+            exit;
         } else {
             $message = "Veuillez remplir tous les champs.";
         }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -90,6 +50,8 @@ if (!isset($_SESSION['utilisateur']) || !isset($_SESSION['utilisateur']['id'])) 
     <link rel="stylesheet" href="checkout.css">
 </head>
 <body>
+    <a href="javascript:history.back()" class="btn-retour">Retour</a>
+
     <div class="container">
         <h1>Validation de la commande</h1>
 
@@ -110,7 +72,7 @@ if (!isset($_SESSION['utilisateur']) || !isset($_SESSION['utilisateur']['id'])) 
                     <option value="virement">Virement bancaire</option>
                 </select>
             </div>
-            <button type="submit" name="valider_commande">Valider la commande</button>
+            <button type="submit" name="valider_commande">Continuer vers le paiement</button>
         </form>
     </div>
 </body>

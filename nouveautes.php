@@ -9,7 +9,7 @@ $message = "";
 
 // Définir le nombre de produits par page
 $produits_par_page = 6;
-$page_courante = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$page_courante = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($page_courante - 1) * $produits_par_page;
 
 // Récupérer les nouveaux produits avec pagination
@@ -41,10 +41,10 @@ try {
     <link rel="stylesheet" href="styles.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
         }
         .container {
             max-width: 1200px;
@@ -52,7 +52,7 @@ try {
             padding: 20px;
             background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         h1 {
             text-align: center;
@@ -70,7 +70,11 @@ try {
             border-radius: 8px;
             overflow: hidden;
             background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .produit:hover {
+            transform: scale(1.02);
         }
         .produit img {
             width: 100%;
@@ -106,6 +110,7 @@ try {
             text-decoration: none;
             border: 1px solid #ddd;
             border-radius: 4px;
+            transition: background-color 0.3s ease;
         }
         .pagination a.active {
             background-color: #007BFF;
@@ -116,9 +121,27 @@ try {
             background-color: #0056b3;
             color: #fff;
         }
+
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #0056b3;
+}
     </style>
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
     <div class="container">
         <h1>Nouveautés</h1>
 
@@ -145,7 +168,7 @@ try {
 
         <div class="pagination">
             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="nouveautes.php?page=<?php echo $i; ?>" class="<?php echo $i === $page_courante ? 'active' : ''; ?>">
+                <a href="nouveautes.php?page=<?php echo $i; ?>" class="<?php echo ($i === $page_courante) ? 'active' : ''; ?>">
                     <?php echo $i; ?>
                 </a>
             <?php endfor; ?>

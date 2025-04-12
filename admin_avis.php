@@ -10,7 +10,6 @@ $message = "";
 // Gestion de la suppression d'un avis
 if (isset($_GET['delete_id'])) {
     $avis_id = intval($_GET['delete_id']);
-
     try {
         $requete = $connexion->prepare("DELETE FROM avis WHERE id = :id");
         $requete->execute([':id' => $avis_id]);
@@ -23,7 +22,6 @@ if (isset($_GET['delete_id'])) {
 // Gestion de l'approbation d'un avis
 if (isset($_GET['approve_id'])) {
     $avis_id = intval($_GET['approve_id']);
-
     try {
         $requete = $connexion->prepare("UPDATE avis SET approuve = 1 WHERE id = :id");
         $requete->execute([':id' => $avis_id]);
@@ -36,7 +34,8 @@ if (isset($_GET['approve_id'])) {
 // Récupération de la liste des avis
 try {
     $req = $connexion->query("
-        SELECT a.id, a.utilisateur_id, a.produit_id, a.commentaire, a.note, a.approuve, u.nom AS utilisateur_nom, p.nom AS produit_nom
+        SELECT a.id, a.utilisateur_id, a.produit_id, a.commentaire, a.note, a.approuve, 
+               u.nom AS utilisateur_nom, p.nom AS produit_nom
         FROM avis a
         JOIN utilisateurs u ON a.utilisateur_id = u.id
         JOIN produits p ON a.produit_id = p.id
@@ -62,75 +61,62 @@ try {
             margin: 0;
             padding: 0;
         }
-
         h2, h3 {
             text-align: center;
             color: #007bff;
             margin-top: 20px;
         }
-
         .message {
+            max-width: 800px;
             margin: 20px auto;
             padding: 10px;
-            max-width: 800px;
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
             border-radius: 4px;
             text-align: center;
         }
-
         table {
             width: 90%;
             margin: 20px auto;
             border-collapse: collapse;
             background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-
         table, th, td {
             border: 1px solid #ddd;
         }
-
         th {
             background-color: #007bff;
             color: #fff;
             padding: 10px;
             text-align: left;
         }
-
         td {
             padding: 10px;
             text-align: left;
         }
-
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-
         tr:hover {
             background-color: #e9ecef;
         }
-
         .actions a {
             text-decoration: none;
             color: #007bff;
             margin-right: 10px;
             transition: color 0.3s ease;
         }
-
         .actions a:hover {
             color: #0056b3;
         }
-
         .actions a.danger {
             color: #dc3545;
         }
-
         .actions a.danger:hover {
             color: #c82333;
         }
-
         footer {
             text-align: center;
             margin-top: 20px;
@@ -139,10 +125,30 @@ try {
             color: #fff;
             position: absolute;
             bottom: 0;
+            width: 100%;
         }
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #0056b3;
+}
     </style>
 </head>
 <body>
+
+<!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
+
     <h2>Gestion des avis</h2>
     <?php if (!empty($message)): ?>
         <p class="message"><?php echo htmlspecialchars($message); ?></p>
@@ -175,7 +181,10 @@ try {
                             <?php if (!$avis_item['approuve']): ?>
                                 <a href="admin_avis.php?approve_id=<?php echo $avis_item['id']; ?>">Approuver</a>
                             <?php endif; ?>
-                            <a href="admin_avis.php?delete_id=<?php echo $avis_item['id']; ?>" class="danger" onclick="return confirm('Voulez-vous vraiment supprimer cet avis ?');">Supprimer</a>
+                            <a href="admin_avis.php?delete_id=<?php echo $avis_item['id']; ?>" class="danger"
+                               onclick="return confirm('Voulez-vous vraiment supprimer cet avis ?');">
+                                Supprimer
+                            </a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -185,8 +194,6 @@ try {
         <p style="text-align: center;">Aucun avis trouvé.</p>
     <?php endif; ?>
 
-    <footer>
-        <p>&copy; 2025 Vente de téléphones - Administration</p>
-    </footer>
+    
 </body>
 </html>

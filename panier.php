@@ -115,6 +115,7 @@ if (!empty($_SESSION['panier'])) {
         .total {
             font-weight: bold;
             text-align: right;
+            margin-top: 10px;
         }
         .actions {
             text-align: center;
@@ -133,9 +134,31 @@ if (!empty($_SESSION['panier'])) {
         .actions a:hover, .actions button:hover {
             background-color: #0056b3;
         }
+        img.produit-thumb {
+            width: 80px;
+            height: auto;
+        }
+
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #0056b3;
+}
     </style>
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
     <div class="container">
         <h1>Votre panier</h1>
 
@@ -144,6 +167,7 @@ if (!empty($_SESSION['panier'])) {
                 <table>
                     <thead>
                         <tr>
+                            <th>Image</th>
                             <th>Produit</th>
                             <th>Prix</th>
                             <th>Quantité</th>
@@ -154,6 +178,13 @@ if (!empty($_SESSION['panier'])) {
                     <tbody>
                         <?php foreach ($produits_panier as $produit): ?>
                             <tr>
+                                <td>
+                                    <?php if(!empty($produit['lien_image'])): ?>
+                                        <img src="images/<?php echo htmlspecialchars($produit['lien_image']); ?>" alt="<?php echo htmlspecialchars($produit['nom']); ?>" class="produit-thumb">
+                                    <?php else: ?>
+                                        Aucun image
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($produit['nom']); ?></td>
                                 <td><?php echo htmlspecialchars(number_format($produit['prix'], 2)); ?> €</td>
                                 <td>
@@ -174,9 +205,6 @@ if (!empty($_SESSION['panier'])) {
                     <button type="submit" name="mettre_a_jour">Mettre à jour le panier</button>
                     <a href="checkout.php">Passer à la caisse</a>
                 </div>
-                <div class="actions">
-                  <a href="checkout.php" class="bouton-commande">Passer à la caisse</a>
-               </div>
             </form>
         <?php else: ?>
             <p>Votre panier est vide.</p>

@@ -4,6 +4,7 @@
 $message = "";
 $error = "";
 
+
 // Gestion de l'envoi du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     $nom = trim($_POST['nom']);
@@ -14,8 +15,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     // Validation des champs
     if (!empty($nom) && !empty($email) && !empty($sujet) && !empty($message_contact)) {
         if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            // Envoi de l'email
-            $to = "admin@ventetelephone.com"; // Remplacez par l'adresse email de l'administrateur
+            // Enregistrement dans la table contacts
+            try {
+                require_once 'gestionnaire.php';
+                $gestionnaire = new Gestionnaire();
+                $connexion = $gestionnaire->getConnexion();
+
+                $stmt = $connexion->prepare("
+                    INSERT INTO contacts (nom, email, sujet, message, date_envoi)
+                    VALUES (:nom, :email, :sujet, :message, NOW())
+                ");
+                $stmt->execute([
+                    ':nom'     => $nom,
+                    ':email'   => $email,
+                    ':sujet'   => $sujet,
+                    ':message' => $message_contact
+                ]);
+            } catch (PDOException $e) {
+                $error = "Erreur lors de l'enregistrement du contact : " . $e->getMessage();
+            }
+
+            // Envoi de l'email (optionnel)
+            $to = "lassissouzakari@gmail.com"; // Remplacez par l'adresse de l'administrateur
             $headers = "From: $email\r\n";
             $headers .= "Reply-To: $email\r\n";
             $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
@@ -128,9 +149,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             height: 300px;
             border: 0;
         }
+
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #0056b3;
+}
     </style>
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
     <div class="container">
         <h1>Contactez-nous</h1>
 

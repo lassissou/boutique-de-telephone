@@ -1,4 +1,6 @@
 <?php
+// filepath: c:\wamp64\www\vente téléphone\admin_rapports.php
+
 require_once 'gestionnaire.php';
 $gestionnaire = new Gestionnaire();
 $connexion = $gestionnaire->getConnexion();
@@ -40,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_report'])) {
                     $message = "Type de rapport invalide.";
                     break;
             }
-
+            
             if (isset($requete)) {
                 $requete->execute([
                     ':date_debut' => $date_debut,
@@ -48,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_report'])) {
                 ]);
                 $rapport = $requete->fetchAll(PDO::FETCH_ASSOC);
                 
-                // Enregistrement du rapport dans la table rapports
+                // Enregistrer le rapport dans la table rapports
                 $requeteInsert = $connexion->prepare("
                     INSERT INTO rapports (type_rapport, date_debut, date_fin, resultat)
                     VALUES (:type_rapport, :date_debut, :date_fin, :resultat)
@@ -73,46 +75,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_report'])) {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Gestion des rapports - Administration</title>
     <link rel="stylesheet" href="admin.css">
     <style>
-        .form-group {
-            margin-bottom: 10px;
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f8f9fa;
         }
-        .form-group label { 
-            display: block; 
-            font-weight: bold; 
-        }
-        .form-group input, 
-        .form-group select { 
-            width: 100%; 
-            padding: 5px; 
-            border: 1px solid #ddd; 
-            border-radius: 4px; 
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {  
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
+        h2, h3 {
+            text-align: center;
+            color: #333;
         }
         .message {
-            margin-bottom: 15px;
+            max-width: 800px;
+            margin: 20px auto;
             padding: 10px;
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
             border-radius: 4px;
+            text-align: center;
         }
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        table {
+            max-width: 800px;
+            margin: 20px auto;
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f1f1;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #0056b3;
+}
     </style>
 </head>
 <body>
+    <!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+<a href="javascript:history.back()" class="btn-retour">Retour</a>
+
     <h2>Gestion des rapports</h2>
     <?php if (!empty($message)): ?>
         <p class="message"><?php echo htmlspecialchars($message); ?></p>

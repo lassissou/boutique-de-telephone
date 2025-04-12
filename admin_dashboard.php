@@ -35,7 +35,7 @@ try {
     ");
     $meilleursProduits = $requeteMeilleursProduits->fetchAll(PDO::FETCH_ASSOC);
 
-    // Commandes récentes (exemple simplifié)
+    // Commandes récentes
     $requeteCommandesRecentes = $connexion->query("
         SELECT id, date_commande, montant_total, statut
         FROM commandes
@@ -54,81 +54,124 @@ try {
     $commandesRecentes = [];
 }
 ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord - Administration</title>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 30px;
+        }
+        .dashboard-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        .dashboard-section {
+            width: 30%;
+            min-width: 280px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .dashboard-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+        .dashboard-section p {
+            margin-bottom: 5px;
+            font-size: 15px;
+            color: #555;
+        }
+        .dashboard-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .dashboard-section li {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+        /* Ajoutez ce style dans votre fichier CSS ou dans un bloc <style> de la page */
+.btn-retour {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
 
-<h2>Tableau de bord</h2>
+.btn-retour:hover {
+    background-color: #0056b3;
+}
+    </style>
+</head>
+<body>
 
-<div class="dashboard-container">
-    <div class="dashboard-section">
-        <h3>Statistiques générales</h3>
-        <p>Nombre total de produits : <?php echo htmlspecialchars($totalProduits); ?></p>
-        <p>Nombre total de commandes : <?php echo htmlspecialchars($totalCommandes); ?></p>
-        <p>Nombre total d'utilisateurs : <?php echo htmlspecialchars($totalUtilisateurs); ?></p>
-        <p>Revenus totaux : <?php echo htmlspecialchars(number_format(isset($totalRevenus) ? $totalRevenus : 0, 2));?> €</p>
+<!-- Insérez ce code dans votre page à l'endroit désiré, par exemple juste avant le footer -->
+
+    <h2>Tableau de bord</h2>
+
+    <div class="dashboard-container">
+        <div class="dashboard-section">
+            <h3>Statistiques générales</h3>
+            <p>Nombre total de produits : <?php echo htmlspecialchars($totalProduits); ?></p>
+            <p>Nombre total de commandes : <?php echo htmlspecialchars($totalCommandes); ?></p>
+            <p>Nombre total d'utilisateurs : <?php echo htmlspecialchars($totalUtilisateurs); ?></p>
+            <p>Revenus totaux : <?php echo htmlspecialchars(number_format(isset($totalRevenus) ? $totalRevenus : 0, 2)); ?> €</p>
+        </div>
+
+        <div class="dashboard-section">
+            <h3>Produits les plus vendus</h3>
+            <?php if (!empty($meilleursProduits)): ?>
+                <ul>
+                    <?php foreach ($meilleursProduits as $produit): ?>
+                        <li>
+                            <?php echo htmlspecialchars($produit['nom']); ?> (<?php echo htmlspecialchars($produit['nombre_ventes']); ?> ventes)
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p>Aucun produit vendu pour le moment.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="dashboard-section">
+            <h3>Commandes récentes</h3>
+            <?php if (!empty($commandesRecentes)): ?>
+                <ul>
+                    <?php foreach ($commandesRecentes as $commande): ?>
+                        <li>
+                            Commande #<?php echo htmlspecialchars($commande['id']); ?> -
+                            Date : <?php echo htmlspecialchars($commande['date_commande']); ?> -
+                            Montant : <?php echo htmlspecialchars(number_format($commande['montant_total'], 2)); ?> € -
+                            Statut : <?php echo htmlspecialchars($commande['statut']); ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p>Aucune commande récente.</p>
+            <?php endif; ?>
+        </div>
     </div>
-
-    <div class="dashboard-section">
-        <h3>Produits les plus vendus</h3>
-        <?php if (!empty($meilleursProduits)): ?>
-            <ul>
-                <?php foreach ($meilleursProduits as $produit): ?>
-                    <li><?php echo htmlspecialchars($produit['nom']); ?> (<?php echo htmlspecialchars($produit['nombre_ventes']); ?> ventes)</li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Aucun produit vendu pour le moment.</p>
-        <?php endif; ?>
-    </div>
-
-    <div class="dashboard-section">
-        <h3>Commandes récentes</h3>
-        <?php if (!empty($commandesRecentes)): ?>
-            <ul>
-                <?php foreach ($commandesRecentes as $commande): ?>
-                    <li>
-                        Commande #<?php echo htmlspecialchars($commande['id']); ?> -
-                        Date : <?php echo htmlspecialchars($commande['date_commande']); ?> -
-                        Montant : <?php echo htmlspecialchars(number_format($commande['montant_total'], 2)); ?> € -
-                        Statut : <?php echo htmlspecialchars($commande['statut']); ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Aucune commande récente.</p>
-        <?php endif; ?>
-    </div>
-</div>
-
-<style>
-.dashboard-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-}
-
-.dashboard-section {
-    width: 30%;
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-}
-
-.dashboard-section h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
-.dashboard-section p {
-    margin-bottom: 5px;
-}
-
-.dashboard-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.dashboard-section li {
-    margin-bottom: 5px;
-}
-</style>
+</body>
+</html>

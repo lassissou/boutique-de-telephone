@@ -3,15 +3,26 @@
 
 session_start();
 
-// Vérifier si une session est active
-if (isset($_SESSION)) {
-    // Supprimer toutes les variables de session
+// Si une session est active, on la vide et on la détruit
+if (!empty($_SESSION)) {
     session_unset();
-
-    // Détruire la session
     session_destroy();
 }
 
-// Rediriger l'utilisateur vers la page de connexion
+// Redirection vers la page d'accueil ou de connexion
+header('Location: index.php');
+exit;
+
+// filepath: c:\wamp64\www\vente téléphone\deconnexion.php
+
+session_start();
+
+// Si une session est active, on la vide et on la détruit
+if (!empty($_SESSION)) {
+    session_unset();
+    session_destroy();
+}
+
+// Redirection vers la page d'accueil ou de connexion
 header('Location: index.php');
 exit;

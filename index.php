@@ -1,107 +1,194 @@
 <?php
 session_start();
 require_once 'gestionnaire.php';
-
 $gestionnaire = new Gestionnaire();
 $connexion = $gestionnaire->getConnexion();
 $message = "";
 
-// 1. Ajout au panier
+// Récupération de la liste de toutes les marques (pour le menu)
+try {
+    $stmtBrands = $connexion->query("SELECT id, nom FROM marques ORDER BY nom ASC");
+    $listeMarques = $stmtBrands->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $listeMarques = [];
+}
+
+// Vérifier si une marque est sélectionnée via GET (pour le menu)
+$filtreMarque = isset($_GET['marque']) ? trim($_GET['marque']) : "";
+
+// --- MOTEUR DE RECHERCHE ---
+// Si l'utilisateur a soumis une recherche (via GET)
+$recherche = isset($_GET['recherche']) ? trim($_GET['recherche']) : "";
+
+function rechercherProduitsEtPromotions($connexion, $query) {
+    $query = trim($query);
+    $wildcard = '%' . strtolower($query) . '%';
+
+    // Recherche des produits correspondants (insensible à la casse)
+    $stmtProd = $connexion->prepare("
+        SELECT p.id, p.nom, p.prix, p.lien_image, m.nom AS marque 
+        FROM produits p 
+        JOIN marques m ON p.marques_id = m.id 
+        JOIN status s ON p.id_status = s.id 
+        WHERE s.status = 'visible' 
+          AND (LOWER(p.nom) LIKE :query OR LOWER(m.nom) LIKE :query)
+        ORDER BY p.date_ajouter DESC
+    ");
+    $stmtProd->bindValue(':query', $wildcard, PDO::PARAM_STR);
+    $stmtProd->execute();
+    $resultats['produits'] = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+
+    // Recherche des promotions correspondantes
+    $stmtPromo = $connexion->prepare("
+        SELECT 
+            p.id, 
+            p.nom, 
+            p.lien_image, 
+            pr.prix_initial, 
+            CASE 
+                WHEN pr.type_reduction = 'pourcentage' THEN pr.prix_initial - (pr.prix_initial * (pr.valeur_reduction / 100))
+                WHEN pr.type_reduction = 'montant' THEN pr.prix_initial - pr.valeur_reduction
+                ELSE pr.prix_initial
+            END AS prix_promo, 
+            pr.type_reduction, 
+            pr.valeur_reduction, 
+            pr.date_debut, 
+            pr.date_fin
+        FROM produits p
+        JOIN promotions pr ON p.id = pr.produit_id 
+        JOIN marques m ON p.marques_id = m.id
+        WHERE CURDATE() BETWEEN pr.date_debut AND pr.date_fin 
+          AND (LOWER(p.nom) LIKE :query OR LOWER(m.nom) LIKE :query)
+        ORDER BY pr.date_debut ASC
+    ");
+    $stmtPromo->bindValue(':query', $wildcard, PDO::PARAM_STR);
+    $stmtPromo->execute();
+    $resultats['promotions'] = $stmtPromo->fetchAll(PDO::FETCH_ASSOC);
+
+    return $resultats;
+}
+
+// Si une recherche est effectuée, on récupère ses résultats
+if (!empty($recherche)) {
+    $resultatsRecherche = rechercherProduitsEtPromotions($connexion, $recherche);
+} 
+
+// --- FIN DU MOTEUR DE RECHERCHE ---
+
+// 1. Ajout au panier (inchangé)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_au_panier'])) {
     $pid = intval($_POST['produit_id']);
     $qte = intval($_POST['quantite']);
     if ($pid > 0 && $qte > 0) {
         if (!isset($_SESSION['panier'])) {
-            $_SESSION['panier'] = array();
+            $_SESSION['panier'] = [];
         }
-        // Si le produit est déjà dans le panier, on ajoute la quantité
         if (isset($_SESSION['panier'][$pid])) {
             $_SESSION['panier'][$pid] += $qte;
         } else {
-            // Sinon on l'initialise à la quantité demandée
             $_SESSION['panier'][$pid] = $qte;
         }
     }
 }
 
-
-// 2. Nouveautés
-try {
-    $req = $connexion->query("
-        SELECT id, nom, prix, prix_initial, lien_image 
-        FROM produits 
-        ORDER BY date_ajouter DESC 
-        LIMIT 4
-    ");
-    $nouveautes = $req->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $nouveautes = [];
-}
-
-// 3. Promotions
-try {
-    $req = $connexion->query("
-        SELECT id, nom, prix, prix_initial, lien_image,
-               (prix_initial - prix) AS reduction,
-               ROUND(((prix_initial - prix)/prix_initial)*100) AS pourcentage
-        FROM produits 
-        WHERE prix_initial > 0 AND prix < prix_initial
-        ORDER BY reduction DESC
-        LIMIT 4
-    ");
-    $promotions = $req->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    $promotions = [];
-}
-
-// 4. Chargement et groupement des avis
-try {
-    $req = $connexion->query("
-        SELECT a.id, a.commentaire, a.note, a.date_avis, a.produit_id, u.nom AS utilisateur_nom
-        FROM avis a
-        JOIN utilisateurs u ON a.utilisateur_id = u.id
-        ORDER BY a.date_avis DESC
-    ");
-    $tous_les_avis = $req->fetchAll(PDO::FETCH_ASSOC);
-    $avis_par_produit = [];
-    foreach ($tous_les_avis as $avis) {
-        $avis_par_produit[$avis['produit_id']][] = $avis;
+// Si aucune recherche n'est effectuée, on charge les nouveautés et promotions habituelles.
+// Sinon, on affiche les résultats de la recherche.
+if (empty($recherche)) {
+    // 2. Requête pour les nouveautés
+    try {
+        // Requete de base
+        $sqlNouveautes = "SELECT p.id, p.nom, p.prix, p.lien_image, m.nom AS marque 
+                          FROM produits p 
+                          JOIN marques m ON p.marques_id = m.id 
+                          JOIN status s ON p.id_status = s.id 
+                          WHERE s.status = 'visible' ";
+        // Filtrer par marque si sélectionnée dans le menu
+        if (!empty($filtreMarque)) {
+            $sqlNouveautes .= "AND m.nom = :marque ";
+        }
+        $sqlNouveautes .= "ORDER BY p.date_ajouter DESC LIMIT 6";
+    
+        $stmt = $connexion->prepare($sqlNouveautes);
+        if (!empty($filtreMarque)) {
+            $stmt->bindValue(':marque', $filtreMarque, PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        $nouveautes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "<p>Erreur lors de la récupération des nouveautés : " . $e->getMessage() . "</p>";
+        $nouveautes = [];
     }
-} catch (PDOException $e) {
-    $avis_par_produit = [];
+    
+    // 3. Requête pour les promotions
+    try {
+        $sqlPromotions = "SELECT 
+                p.id, 
+                p.nom, 
+                p.lien_image, 
+                pr.prix_initial, 
+                CASE 
+                    WHEN pr.type_reduction = 'pourcentage' THEN pr.prix_initial - (pr.prix_initial * (pr.valeur_reduction / 100))
+                    WHEN pr.type_reduction = 'montant' THEN pr.prix_initial - pr.valeur_reduction
+                    ELSE pr.prix_initial
+                END AS prix_promo, 
+                pr.type_reduction, 
+                pr.valeur_reduction, 
+                pr.date_debut, 
+                pr.date_fin
+            FROM produits p
+            JOIN promotions pr ON p.id = pr.produit_id 
+            JOIN marques m ON p.marques_id = m.id
+            WHERE CURDATE() BETWEEN pr.date_debut AND pr.date_fin ";
+        if (!empty($filtreMarque)) {
+            $sqlPromotions .= "AND m.nom = :marque ";
+        }
+        $sqlPromotions .= "ORDER BY pr.date_debut ASC";
+    
+        $stmt = $connexion->prepare($sqlPromotions);
+        if (!empty($filtreMarque)) {
+            $stmt->bindValue(':marque', $filtreMarque, PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        $promotions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "<p>Erreur lors de la récupération des promotions : " . $e->getMessage() . "</p>";
+        $promotions = [];
+    }
+} else {
+    // Pour une recherche, on récupère les résultats
+    $nouveautes = $resultatsRecherche['produits'];
+    $promotions = $resultatsRecherche['promotions'];
 }
 
-// 5. Ajout d’un nouvel avis
+// Traitement de l'ajout d'un avis
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
     if (isset($_SESSION['utilisateur'])) {
-        $utilisateur_id = $_SESSION['utilisateur']['id'];
-        $prod_id = intval($_POST['produit_id']);
+        $produit_id = intval($_POST['produit_id']);
         $commentaire = trim($_POST['commentaire']);
         $note = intval($_POST['note']);
-        if ($prod_id > 0 && $commentaire !== "" && $note >= 1 && $note <= 5) {
+        
+        if ($produit_id > 0 && !empty($commentaire) && $note >= 1 && $note <= 5) {
             try {
-                $ins = $connexion->prepare("
-                    INSERT INTO avis (utilisateur_id, produit_id, commentaire, note, date_avis)
-                    VALUES (:uid, :pid, :com, :note, NOW())
-                ");
-                $ins->execute([
-                    ':uid' => $utilisateur_id,
-                    ':pid' => $prod_id,
-                    ':com' => $commentaire,
-                    ':note' => $note
-                ]);
-                header('Location: index.php');
-                exit;
+                $stmt = $connexion->prepare("INSERT INTO avis (utilisateur_id, produit_id, commentaire, note, approuve) 
+                                            VALUES (:user_id, :prod_id, :comment, :note, 0)");
+                $stmt->bindValue(':user_id', $_SESSION['utilisateur']['id'], PDO::PARAM_INT);
+                $stmt->bindValue(':prod_id', $produit_id, PDO::PARAM_INT);
+                $stmt->bindValue(':comment', $commentaire, PDO::PARAM_STR);
+                $stmt->bindValue(':note', $note, PDO::PARAM_INT);
+                $stmt->execute();
+                
+                $message = "Votre avis a été soumis et est en attente de modération.";
             } catch (PDOException $e) {
-                $message = "Erreur ajout avis : " . $e->getMessage();
+                $message = "Erreur lors de l'enregistrement de l'avis : " . $e->getMessage();
             }
         } else {
-            $message = "Veuillez remplir tous les champs correctement.";
+            $message = "Veuillez remplir correctement tous les champs.";
         }
-    } else {
-        $message = "Vous devez être connecté pour laisser un avis.";
     }
 }
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -110,6 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Accueil - Vente de téléphones</title>
     <link rel="stylesheet" href="index.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 <header>
@@ -119,18 +207,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
     <nav>
         <ul>
             <li><a href="index.php">Accueil</a></li>
+            <!-- Menu dynamique des marques -->
             <li>
                 <a href="#">Marques</a>
                 <ul>
-                    <li><a href="index.php?marque=apple">Apple</a></li>
-                    <li><a href="index.php?marque=samsung">Samsung</a></li>
-                    <li><a href="index.php?marque=xiaomi">Xiaomi</a></li>
+                    <?php if(!empty($listeMarques)): ?>
+                        <?php foreach ($listeMarques as $marque): ?>
+                            <li>
+                                <a href="index.php?marque=<?php echo urlencode($marque['nom']); ?>">
+                                    <?php echo htmlspecialchars($marque['nom']); ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li>Aucune marque définie</li>
+                    <?php endif; ?>
                 </ul>
             </li>
-                <li><a href="nouveautes.php">Nouveautés</a></li>
-                <li><a href="promotions.php">Promotions</a></li>
-                <li><a href="contact.php">Contact</a></li>
-                <li><a href="panier.php">Panier (<?php echo isset($_SESSION['panier']) ? count($_SESSION['panier']) : 0; ?>)</a></li>
+            <li><a href="nouveautes.php">Nouveautés</a></li>
+            <li><a href="promotions.php">Promotions</a></li>
+            <li><a href="contact.php">Contact</a></li>
+            <li><a href="panier.php">Panier (<?php echo isset($_SESSION['panier']) ? count($_SESSION['panier']) : 0; ?>)</a></li>
             <li>
                 <?php if (isset($_SESSION['utilisateur'])): ?>
                     <a href="compte.php">Mon compte</a>
@@ -141,26 +238,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
             </li>
         </ul>
     </nav>
+    <!-- Formulaire de recherche -->
+    <div class="recherche">
+        <form method="GET" action="index.php" class="rechercher">
+            <input type="text" name="recherche" placeholder="Rechercher un produit ou une marque..." value="<?php echo htmlspecialchars($recherche); ?>">
+            <button type="submit">Rechercher</button>
+        </form>
+    </div>
 </header>
 
-<!--image banner-->
+<!-- Bannière -->
 <div class="banner">
-    <img src="images/banner.jpg" alt="Bannière de promotion">
-    <h1>Bienvenue dans notre boutique! </h1>
+    <h1>Bienvenue dans notre boutique!</h1>
     <p>Découvrez les dernières nouveautés et promotions sur les téléphones.</p>
     <a href="nouveautes.php" class="bouton-plus">Voir toutes les nouveautés</a>
-
 </div>
 
 <!-- Section Nouveautés -->
 <section class="nouveautes">
-    <h2>Nouveautés</h2>
+    <h2>Nouveautés <?php echo (!empty($filtreMarque)) ? " - " . htmlspecialchars($filtreMarque) : ""; ?>
+     <?php echo (!empty($recherche)) ? " - Résultats pour : " . htmlspecialchars($recherche) : ""; ?>
+    </h2>
     <div class="liste-produits">
-        <?php if ($nouveautes): ?>
+        <?php if (!empty($nouveautes)): ?>
             <?php foreach ($nouveautes as $produit): ?>
                 <div class="produit">
-                    <img src="images/<?php echo htmlspecialchars($produit['lien_image']); ?>"
-                         alt="<?php echo htmlspecialchars($produit['nom']); ?>">
+                    <img src="images/<?php echo htmlspecialchars($produit['lien_image']); ?>" alt="<?php echo htmlspecialchars($produit['nom']); ?>">
                     <h3><?php echo htmlspecialchars($produit['nom']); ?></h3>
                     <p><?php echo number_format($produit['prix'], 2); ?> Fcfa</p>
                     <form method="POST" action="index.php">
@@ -177,21 +280,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
 </section>
 
 <!-- Section Promotions -->
+<!-- Section Promotions -->
 <section class="promotions">
-    <h2>Promotions</h2>
+    <h2>Promotions <?php echo (!empty($filtreMarque)) ? " - " . htmlspecialchars($filtreMarque) : ""; ?>
+     <?php echo (!empty($recherche)) ? " - Résultats pour : " . htmlspecialchars($recherche) : ""; ?>
+    </h2>
     <div class="liste-promotions">
-        <?php if ($promotions): ?>
+        <?php if (!empty($promotions)): ?>
             <?php foreach ($promotions as $promotion): ?>
                 <div class="promotion">
-                    <img src="images/<?php echo htmlspecialchars($promotion['lien_image']); ?>"
-                         alt="<?php echo htmlspecialchars($promotion['nom']); ?>">
+                    <img src="images/<?php echo htmlspecialchars($promotion['lien_image']); ?>" alt="<?php echo htmlspecialchars($promotion['nom']); ?>">
                     <h3><?php echo htmlspecialchars($promotion['nom']); ?></h3>
                     <p class="prix-initial">
                         <s><?php echo number_format($promotion['prix_initial'], 2); ?> Fcfa</s>
                     </p>
                     <p class="prix-promotion">
-                        <?php echo number_format($promotion['prix'], 2); ?> Fcfa
-                        <span class="reduction">(-<?php echo $promotion['pourcentage']; ?>%)</span>
+                        <?php echo number_format($promotion['prix_promo'], 2); ?> Fcfa
+                        <span class="reduction">
+                            <?php if ($promotion['type_reduction'] === 'pourcentage'): ?>
+                                (-<?php echo htmlspecialchars($promotion['valeur_reduction']); ?>%)
+                            <?php else: ?>
+                                (-<?php echo number_format($promotion['valeur_reduction'], 2); ?> Fcfa)
+                            <?php endif; ?>
+                        </span>
                     </p>
                     <form method="POST" action="index.php">
                         <input type="hidden" name="produit_id" value="<?php echo $promotion['id']; ?>">
@@ -206,34 +317,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
     </div>
 </section>
 
-<!-- Section dépôt d'avis général -->
-<section class="deposer-avis">
-    <h2>Laisser un avis</h2>
-    <?php if ($message): ?>
-        <p class="message"><?php echo htmlspecialchars($message); ?></p>
-    <?php endif; ?>
-    <?php if (isset($_SESSION['utilisateur'])): ?>
-        <?php $pid = isset($_GET['produit_id']) ? intval($_GET['produit_id']) : 0; ?>
-        <form method="POST" action="index.php">
-            <input type="hidden" name="produit_id" value="<?php echo $pid; ?>">
-            <textarea name="commentaire" placeholder="Votre commentaire" required></textarea>
-            <select name="note" required>
-                <option value="" disabled selected>Note</option>
-                <option value="1">1 étoile</option>
-                <option value="2">2 étoiles</option>
-                <option value="3">3 étoiles</option>
-                <option value="4">4 étoiles</option>
-                <option value="5">5 étoiles</option>
-            </select>
-            <button type="submit" name="ajouter_avis">Envoyer</button>
-        </form>
-    <?php else: ?>
-        <p>Vous devez être connecté pour laisser un avis.</p>
-    <?php endif; ?>
+<!-- Affichage des avis existants -->
+
+<section class="affichage-avis">
+    <h2>Derniers avis</h2>
+    
+    <?php
+    try {
+        $stmt = $connexion->prepare("
+            SELECT a.*, u.nom AS utilisateur_nom, p.nom AS produit_nom
+            FROM avis a
+            JOIN utilisateurs u ON a.utilisateur_id = u.id
+            JOIN produits p ON a.produit_id = p.id
+            WHERE a.approuve = 1
+            ORDER BY a.date_avis DESC
+            LIMIT 8
+        ");
+        $stmt->execute();
+        $avis = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        if (!empty($avis)) {
+            foreach ($avis as $a) {
+                echo '<div class="avis-card">';
+                echo '<div class="avis-header">';
+                echo '<span class="user">'.htmlspecialchars($a['utilisateur_nom']).'</span>';
+                echo '<span class="product">'.htmlspecialchars($a['produit_nom']).'</span>';
+                echo '<span class="date">'.date('d/m/Y', strtotime($a['date_avis'])).'</span>';
+                echo '</div>';
+                
+                echo '<div class="rating">';
+                for ($i = 1; $i <= 5; $i++) {
+                    echo ($i <= $a['note']) ? '★' : '☆';
+                }
+                echo '</div>';
+                
+                echo '<div class="comment">'.nl2br(htmlspecialchars($a['commentaire'])).'</div>';
+                echo '</div>';
+            }
+        } else {
+            echo '<p class="no-reviews">Aucun avis disponible pour le moment.</p>';
+        }
+    } catch (PDOException $e) {
+        echo '<p class="db-error">Erreur de chargement des avis.</p>';
+    }
+    ?>
 </section>
+<!-- Section Avis -->
+<section class="deposer-avis">
+<?php
+// Vérification si l'utilisateur est connecté
+if (isset($_SESSION['utilisateur'])): 
+?>
+    <section class="ajout-avis">
+        <h3>Donnez votre avis</h3>
+        <form method="POST" action="traitement_avis.php" class="form-avis">
+            <div class="form-group">
+                <label for="produit_nom">Produit :</label>
+                <select name="produit_id" id="produit_nom" required>
+                    <option value="">-- Sélectionnez un produit --</option>
+                    <?php
+                    // Récupération de la liste des produits
+                    $stmt = $connexion->query("SELECT id, nom FROM produits ORDER BY nom ASC");
+                    $produits = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    foreach ($produits as $produit) {
+                        echo '<option value="'.$produit['id'].'">'.htmlspecialchars($produit['nom']).'</option>';
+                    }
+                    ?>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Note :</label>
+                <div class="rating-stars">
+                    <?php for ($i = 5; $i >= 1; $i--): ?>
+                        <input type="radio" id="star<?php echo $i; ?>" name="note" value="<?php echo $i; ?>" required>
+                        <label for="star<?php echo $i; ?>">★</label>
+                    <?php endfor; ?>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="commentaire">Votre avis :</label>
+                <textarea name="commentaire" id="commentaire" rows="5" required 
+                          placeholder="Décrivez votre expérience avec ce produit..."></textarea>
+            </div>
+            
+            <button type="submit" name="submit_avis" class="btn-submit">Envoyer l'avis</button>
+        </form>
+    </section>
+        <?php else: ?>
+            <div class="connexion-requise">
+                    <p>Vous devez être connecté pour poster un avis.</p>
+                    <a href="connexion.php" class="btn-connexion">Se connecter</a>
+            </div>
+        <?php endif; ?>
+</section>
+
 
 <!-- Footer -->
 <footer>
+    
     <div class="contenu-footer">
         <div class="colonnes-footer">
             <div class="colonne">
@@ -250,14 +434,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
             <div class="colonne">
                 <h3>Contact</h3>
                 <p>Adresse : 123 Rue des Téléphones, Ville</p>
-                <p>Téléphone : 01 23 45 67 89</p>
+                <p>Téléphone : 01 23 45 67 89</p>
                 <p>Email : contact@votresite.com</p>
             </div>
             <div class="colonne reseaux-sociaux">
                 <h3>Suivez-nous</h3>
-                <a href="#"><img src="images/facebook.png" alt="Facebook"></a>
-                <a href="#"><img src="images/twitter.png" alt="Twitter"></a>
-                <a href="#"><img src="images/instagram.png" alt="Instagram"></a>
+                <a href="https://www.facebook.com" target="_blank"><i class="fab fa-facebook"></i> Facebook</a><br>
+                <a href="https://www.twitter.com" target="_blank"><i class="fab fa-twitter"></i> Twitter</a><br>
+                <a href="https://www.instagram.com" target="_blank"><i class="fab fa-instagram"></i> Instagram</a><br>
+                <a href="https://www.linkedin.com" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
             </div>
             <div class="colonne paiements">
                 <h3>Paiements sécurisés</h3>
@@ -271,6 +456,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
         </div>
     </div>
 </footer>
+<script>
+  // Si l'URL contient des paramètres, on les retire pour afficher l'état initial dès rafraîchissement
+  if(window.location.search) {
+      window.history.replaceState(null, null, window.location.pathname);
+  }
+</script>
 <script src="index.js"></script>
 </body>
 </html>
