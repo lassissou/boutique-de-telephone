@@ -249,9 +249,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter_avis'])) {
 
 <!-- Bannière -->
 <div class="banner">
-    <h1>Bienvenue dans notre boutique!</h1>
-    <p>Découvrez les dernières nouveautés et promotions sur les téléphones.</p>
-    <a href="nouveautes.php" class="bouton-plus">Voir toutes les nouveautés</a>
+    <div class="bannier-content">
+        <h1>Bienvenue dans notre boutique!</h1>
+        <p>Découvrez les dernières nouveautés et promotions sur les téléphones.</p>
+        <a href="nouveautes.php" class="bouton-plus">Voir toutes les nouveautés</a>
+    </div>
+
+    <div class="bannier-slider">
+        <div class="slider-image active">
+            <img src="images/1744389108_479244395_1176540220831865_5327526399896685911_n.jpg" alt="Promotion spéciale">  
+        </div>
+        <div class="slider-image">
+            <img src="images/1744309125_480900948_1141645627401114_1532489086935915470_n.jpg" alt="Nouveaux modèles">  
+        </div>
+        <div class="slider-image">
+            <img src="images/1744361212_472546353_968299898514204_7450903685162314867_n.jpg" alt="Meilleures ventes">  
+        </div>
+    </div>
+    
+    <div class="slider-controls">
+        <span class="slider-dot active" data-index="0"></span>
+        <span class="slider-dot" data-index="1"></span>
+        <span class="slider-dot" data-index="2"></span>
+    </div>
 </div>
 
 <!-- Section Nouveautés -->
@@ -412,6 +432,48 @@ if (isset($_SESSION['utilisateur'])):
                     <a href="connexion.php" class="btn-connexion">Se connecter</a>
             </div>
         <?php endif; ?>
+</section>
+
+<!-- Section Contact -->
+<section id="contact" class="contact-section">
+    <h2>Contactez-nous</h2>
+    <?php if (!empty($message)): ?>
+        <div class="message"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
+    <form method="POST" action="#contact">
+            <div class="form-group">
+                <label for="nom">Nom :</label>
+                <input type="text" id="nom" name="nom" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email :</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="sujet">Sujet :</label>
+                <input type="text" id="sujet" name="sujet" required>
+            </div>
+            <div class="form-group">
+                <label for="message">Message :</label>
+                <textarea id="message" name="message" required></textarea>
+            </div>
+            <button type="submit" name="submit_contact">Envoyer</button>
+        </form>
+    
+    <div class="contact-info">
+        <div class="info-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <p>123 Rue des Téléphones, Ville</p>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-phone"></i>
+            <p>01 23 45 67 89</p>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-envelope"></i>
+            <p>contact@votresite.com</p>
+        </div>
+    </div>
 </section>
 
 
